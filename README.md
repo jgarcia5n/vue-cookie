@@ -5,9 +5,10 @@ This lib overrides the default fetch and XMLHttpRequest implementations to reloa
 allowing you to use cookies as computed properties or to watch cookies for changes made by a request
 
 ## Installation
-```
+```bash
 npm install vue-cookies-reactive --save
-
+```
+```js
 // require
 var Vue = require('vue')
 Vue.use(require('vue-cookies-reactive'))
@@ -31,44 +32,44 @@ syntax format: **[this | Vue].$cookies.[method]**
 
 ### config()
 Set global config
-```
+```js
 $cookies.config(expireTimes[,path[, domain[, secure[, sameSite]]])  // default: expireTimes = 1d, path = '/', domain = '', secure = '', sameSite = 'Lax'
 ```
 ### set()
 Set a cookie
-```
+```js
 $cookies.set(keyName, value[, expireTimes[, path[, domain[, secure[, sameSite]]]]])   //return this
 ```
 ### get()
 Get a cookie or all cookies as an object if no key is passed
-```
+```js
 $cookies.get(keyName)  // return value                             
 ```
 ### remove()
 Remove a cookie
-```
+```js
 $cookies.remove(keyName [, path [, domain]])  // return this
 ```
 ### isKey()
 Check if a cookie is set
-```
+```js
 $cookies.isKey(keyName)  // return false or true
 ```
 ### keys()
 Get all keys of cookies
-```
+```js
 $cookies.keys()  // return an array
 ```
 ### refresh()
 Refresh all cookies, note that this is already done automatically after each `XMLHttpRequest` or `fetch` are executed so it's unlikely you will need it
-```
+```js
 $cookies.resfresh()  // return this
 ```
 
 ## Example Usage
 
 #### set global config
-```
+```js
 // 30 day after, expire
 Vue.$cookies.config('30d')
 
@@ -84,7 +85,7 @@ this.$cookies.config(60 * 60 * 24 * 30,'');
 ```
 
 #### support json object
-```
+```js
 var user = { id:1, name:'Journal',session:'25j_7Sl6xDq2Kc3ym0fmrSSk2xV2XkUkX' };
 this.$cookies.set('user',user);
 // print user name
@@ -97,7 +98,7 @@ console.log(this.$cookies.get('user').name)
 **Following equivalence: 1 day after, expire**
 
 **Support chaining sets together**
-``` javascript
+```js
  // default expire time: 1 day
 this.$cookies.set("user_session","25j_7Sl6xDq2Kc3ym0fmrSSk2xV2XkUkX")
         // number + d , ignore case
@@ -112,7 +113,7 @@ this.$cookies.set("user_session","25j_7Sl6xDq2Kc3ym0fmrSSk2xV2XkUkX")
 ```
 #### set expire times, input number type
 
-```
+```js
 this.$cookies.set("default_unit_second","input_value",1);            // 1 second after, expire
 this.$cookies.set("default_unit_second","input_value",60 + 30);      // 1 minute 30 second after, expire
 this.$cookies.set("default_unit_second","input_value",60 * 60 * 12); // 12 hour after, expire
@@ -121,7 +122,7 @@ this.$cookies.set("default_unit_second","input_value",60 * 60 * 24 * 30); // 1 m
 
 #### set expire times - end of browser session
 
-```
+```js
 this.$cookies.set("default_unit_second","input_value",0);          // end of session - use 0 or "0"!
 ```
 
@@ -143,7 +144,7 @@ this.$cookies.set("default_unit_second","input_value",0);          // end of ses
 
 **not support the double value**
 
-```javascript
+```js
 this.$cookies.set("token","GH1.1.1689020474.1484362313","60s");  // 60 second after, expire
 this.$cookies.set("token","GH1.1.1689020474.1484362313","30MIN");  // 30 minute after, expire, ignore case
 this.$cookies.set("token","GH1.1.1689020474.1484362313","24d");  // 24 day after, expire
@@ -157,21 +158,21 @@ this.$cookies.set("token","GH1.1.1689020474.1484362313", "Sat, 13 Mar 2017 12:25
 ```
 
 #### set expire support date
-```
+```js
 var date = new Date;
 date.setDate(date.getDate() + 1);
 this.$cookies.set("token","GH1.1.1689020474.1484362313", date);
 ```
 
 #### set never expire
-```
+```js
 this.$cookies.set("token","GH1.1.1689020474.1484362313", Infinity);  // never expire
 // never expire , only -1,Other negative Numbers are invalid
 this.$cookies.set("token","GH1.1.1689020474.1484362313", -1); 
 ```
 
 #### remove cookie
-```
+```js
 this.$cookies.set("token",value); // domain.com and *.doamin.com are readable
 this.$cookies.remove("token"); // remove token of domain.com and *.doamin.com 
 
@@ -180,7 +181,7 @@ this.$cookies.remove("token", null, "domain.com"); // remove token of domain.com
 ```
 
 #### set other arguments
-```
+```js
 // set path
 this.$cookies.set("use_path_argument","value","1d","/app");  
 
@@ -195,7 +196,7 @@ this.$cookies.set("use_path_argument","value",null, null, null, null, "Lax");
 ```
 
 #### other operation
-```
+```js
 // check a cookie exist
 this.$cookies.isKey("token")
 
@@ -227,4 +228,4 @@ This is a limitation of cookies and not this lib
 ## License
 
 [MIT](http://opensource.org/licenses/MIT)
-Copyright (c) 2016-present, cmp-cc
+Copyright (c) 2020, Tofandel
