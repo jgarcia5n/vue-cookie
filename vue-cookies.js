@@ -15,12 +15,39 @@
     secure: '',
     sameSite: '; SameSite=Lax'
   };
+  
+  var reactive = new Vue({
+    computed: {
+       cookie: {
+         get() {
+           return this.docCookie;
+         },
+         set(cookie) {
+           document.cookie = cookie; //Document cookie is weird and will append the data
+           this.docCookie = document.cookie; 
+         }
+       }
+    },
+    data() {
+      return docCookie: document.cookie 
+    }
+  });
 
   var VueCookies = {
     // install of Vue
     install: function (Vue) {
       Vue.prototype.$cookies = this;
       Vue.$cookies = this;
+      const oldFetch = fetch;
+      const resetCookies = () => reactive.docCookie = document.cookie;
+      fetch = function () {
+        return oldFetch.apply(this, arguments).then(resetCookies);
+      }
+      const send = XMLHttpRequest.prototype.send
+      XMLHttpRequest.prototype.send = function() { 
+        this.addEventListener('load', resetCookies);
+        return send.apply(this, arguments);
+      }
     },
     config: function (expireTimes, path, domain, secure, sameSite) {
       defaultConfig.expires = expireTimes ? expireTimes : '1d';
@@ -30,7 +57,7 @@
       defaultConfig.sameSite = sameSite ? '; SameSite=' + sameSite : '; SameSite=Lax';
     },
     get: function (key) {
-      var value = decodeURIComponent(document.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
+      var value = decodeURIComponent(reactive.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
 
       if (value && value.substring(0, 1) === '{' && value.substring(value.length - 1, value.length) === '}') {
         try {
@@ -96,7 +123,7 @@
             break;
         }
       }
-      document.cookie =
+      reactive.cookie =
           encodeURIComponent(key) + '=' + encodeURIComponent(value) +
           _expires +
           (domain ? '; domain=' + domain : defaultConfig.domain) +
@@ -109,7 +136,7 @@
       if (!key || !this.isKey(key)) {
         return false;
       }
-      document.cookie = encodeURIComponent(key) +
+      reactive.cookie = encodeURIComponent(key) +
           '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' +
           (domain ? '; domain=' + domain : defaultConfig.domain) +
           (path ? '; path=' + path : defaultConfig.path) +
@@ -117,11 +144,11 @@
       return this;
     },
     isKey: function (key) {
-      return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(document.cookie);
+      return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(reactive.cookie);
     },
     keys: function () {
-      if (!document.cookie) return [];
-      var _keys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/);
+      if (!reactive.cookie) return [];
+      var _keys = reactive.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/);
       for (var _index = 0; _index < _keys.length; _index++) {
         _keys[_index] = decodeURIComponent(_keys[_index]);
       }
