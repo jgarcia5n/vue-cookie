@@ -18,7 +18,7 @@ export interface VueCookies {
   /**
    * Get a cookie
    */
-  get(keyName: string): any;
+  get(keyName?: string): any;
 
   /**
    * Remove a cookie
@@ -34,6 +34,11 @@ export interface VueCookies {
    * Get All cookie name
    */
   keys(): string[];
+
+  /**
+   * Refresh cookies manually (if for some reason it didn't work)
+   */
+  refresh(): this;
 }
 
 declare const _default : {

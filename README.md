@@ -1,25 +1,20 @@
 # vue-cookies
 
-A simple Vue.js plugin for handling browser cookies
+A simple Vue.js plugin for handling browser cookies reactively, heavily inspired by [vue-cookies](https://www.npmjs.com/package/vue-cookies)
+This lib overrides the default fetch and XMLHttpRequest implementations to reload cookies after a request is executed, 
+allowing you to use cookies as computed properties or to watch cookies for changes made by a request
 
 ## Installation
-
-### Browser
 ```
-  <script src="https://unpkg.com/vue/dist/vue.js"></script>
-  <script src="https://unpkg.com/vue-cookies@1.7.3/vue-cookies.js"></script>
-```
-### Package Managers
-```
-npm install vue-cookies --save
+npm install vue-cookies-reactive --save
 
 // require
 var Vue = require('vue')
-Vue.use(require('vue-cookies'))
+Vue.use(require('vue-cookies-reactive'))
 
 // es2015 module
 import Vue from 'vue'
-import VueCookies from 'vue-cookies'
+import VueCookies from 'vue-cookies-reactive'
 Vue.use(VueCookies)
 
 // set default config
@@ -34,30 +29,40 @@ Vue.$cookies.set('hover-time','1s');
 
 syntax format: **[this | Vue].$cookies.[method]**
 
-* Set global config
+### config()
+Set global config
 ```
 $cookies.config(expireTimes[,path[, domain[, secure[, sameSite]]])  // default: expireTimes = 1d, path = '/', domain = '', secure = '', sameSite = 'Lax'
 ```
-
-* Set a cookie
+### set()
+Set a cookie
 ```
 $cookies.set(keyName, value[, expireTimes[, path[, domain[, secure[, sameSite]]]]])   //return this
 ```
-* Get a cookie
+### get()
+Get a cookie or all cookies as an object if no key is passed
 ```
 $cookies.get(keyName)  // return value                             
 ```
-* Remove a cookie
+### remove()
+Remove a cookie
 ```
 $cookies.remove(keyName [, path [, domain]])  // return this
 ```
-* Exist a `cookie name`
+### isKey()
+Check if a cookie is set
 ```
 $cookies.isKey(keyName)  // return false or true
 ```
-* Get All `cookie name`
+### keys()
+Get all keys of cookies
 ```
-$cookies.keys()  // return a array
+$cookies.keys()  // return an array
+```
+### refresh()
+Refresh all cookies, note that this is already done automatically after each `XMLHttpRequest` or `fetch` are executed so it's unlikely you will need it
+```
+$cookies.resfresh()  // return this
 ```
 
 ## Example Usage
@@ -215,6 +220,8 @@ this.$cookies.keys().forEach(cookie => this.$cookies.remove(cookie))
 ## Warning
 
 **$cookies key names Cannot be set to ['expires','max-age','path','domain','secure','SameSite']**
+
+This is a limitation of cookies and not this lib
 
 
 ## License
