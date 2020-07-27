@@ -1,173 +1,165 @@
-/**
- * Vue Cookies v1.7.3
- * https://github.com/cmp-cc/vue-cookies
- *
- * Copyright 2016, cmp-cc
- * Released under the MIT license
- */
+const defaultConfig = {
+  expires: '1d',
+  path: '; path=/',
+  domain: '',
+  secure: '',
+  sameSite: '; SameSite=Lax',
+};
 
-(function () {
+export default {
+  // install of Vue
+  reactive: null,
+  install(Vue) {
+    Vue.prototype.$cookies = this;
+    Vue.$cookies = this;
+    const oldFetch = fetch;
+    this.reactive = new Vue({
+      data() {
+        return {
+          docCookie: '',
+        };
+      },
+      computed: {
+        cookies: {
+          get() {
+            const c = this.docCookie.split('; ');
+            const cookies = {};
 
-  var defaultConfig = {
-    expires: '1d',
-    path: '; path=/',
-    domain: '',
-    secure: '',
-    sameSite: '; SameSite=Lax'
-  };
-  
-  var reactive = new Vue({
-    computed: {
-       cookie: {
-         get() {
-           return this.docCookie;
-         },
-         set(cookie) {
-           document.cookie = cookie; //Document cookie is weird and will append the data
-           this.docCookie = document.cookie; 
-         }
-       }
-    },
-    data() {
-      return docCookie: document.cookie 
-    }
-  });
-
-  var VueCookies = {
-    // install of Vue
-    install: function (Vue) {
-      Vue.prototype.$cookies = this;
-      Vue.$cookies = this;
-      const oldFetch = fetch;
-      const resetCookies = () => reactive.docCookie = document.cookie;
-      fetch = function () {
-        return oldFetch.apply(this, arguments).then(resetCookies);
-      }
-      const send = XMLHttpRequest.prototype.send
-      XMLHttpRequest.prototype.send = function() { 
-        this.addEventListener('load', resetCookies);
-        return send.apply(this, arguments);
-      }
-    },
-    config: function (expireTimes, path, domain, secure, sameSite) {
-      defaultConfig.expires = expireTimes ? expireTimes : '1d';
-      defaultConfig.path = path ? '; path=' + path : '; path=/';
-      defaultConfig.domain = domain ? '; domain=' + domain : '';
-      defaultConfig.secure = secure ? '; Secure' : '';
-      defaultConfig.sameSite = sameSite ? '; SameSite=' + sameSite : '; SameSite=Lax';
-    },
-    get: function (key) {
-      var value = decodeURIComponent(reactive.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
-
-      if (value && value.substring(0, 1) === '{' && value.substring(value.length - 1, value.length) === '}') {
-        try {
-          value = JSON.parse(value);
-        } catch (e) {
-          return value;
-        }
-      }
-      return value;
-    },
-    set: function (key, value, expireTimes, path, domain, secure, sameSite) {
-      if (!key) {
-        throw new Error('Cookie name is not find in first argument.');
-      } else if (/^(?:expires|max\-age|path|domain|secure|SameSite)$/i.test(key)) {
-        throw new Error('Cookie key name illegality, Cannot be set to ["expires","max-age","path","domain","secure","SameSite"]\t current key name: ' + key);
-      }
-      // support json object
-      if (value && value.constructor === Object) {
-        value = JSON.stringify(value);
-      }
-      var _expires = '';
-      expireTimes = expireTimes === undefined ? defaultConfig.expires : expireTimes;
-      if (expireTimes && expireTimes != 0) {
-        switch (expireTimes.constructor) {
-          case Number:
-            if (expireTimes === Infinity || expireTimes === -1) _expires = '; expires=Fri, 31 Dec 9999 23:59:59 GMT';
-            else _expires = '; max-age=' + expireTimes;
-            break;
-          case String:
-            if (/^(?:\d+(y|m|d|h|min|s))$/i.test(expireTimes)) {
-              // get capture number group
-              var _expireTime = expireTimes.replace(/^(\d+)(?:y|m|d|h|min|s)$/i, '$1');
-              // get capture type group , to lower case
-              switch (expireTimes.replace(/^(?:\d+)(y|m|d|h|min|s)$/i, '$1').toLowerCase()) {
-                  // Frequency sorting
-                case 'm':
-                  _expires = '; max-age=' + +_expireTime * 2592000;
-                  break; // 60 * 60 * 24 * 30
-                case 'd':
-                  _expires = '; max-age=' + +_expireTime * 86400;
-                  break; // 60 * 60 * 24
-                case 'h':
-                  _expires = '; max-age=' + +_expireTime * 3600;
-                  break; // 60 * 60
-                case 'min':
-                  _expires = '; max-age=' + +_expireTime * 60;
-                  break; // 60
-                case 's':
-                  _expires = '; max-age=' + _expireTime;
-                  break;
-                case 'y':
-                  _expires = '; max-age=' + +_expireTime * 31104000;
-                  break; // 60 * 60 * 24 * 30 * 12
-                default:
-                  new Error('unknown exception of "set operation"');
+            for (let i = c.length - 1; i >= 0; i--) {
+              const k = c[i].split('=');
+              try {
+                cookies[k[0]] = JSON.parse(k[1]);
+              } catch (e) {
+                cookies[k[0]] = k[1];
               }
-            } else {
-              _expires = '; expires=' + expireTimes;
             }
-            break;
-          case Date:
-            _expires = '; expires=' + expireTimes.toUTCString();
-            break;
-        }
-      }
-      reactive.cookie =
-          encodeURIComponent(key) + '=' + encodeURIComponent(value) +
-          _expires +
-          (domain ? '; domain=' + domain : defaultConfig.domain) +
-          (path ? '; path=' + path : defaultConfig.path) +
-          (secure === undefined ? defaultConfig.secure : secure ? '; Secure' : '') +
-          (sameSite === undefined ? defaultConfig.sameSite : (sameSite ? '; SameSite=' + sameSite : ''));
-      return this;
-    },
-    remove: function (key, path, domain) {
-      if (!key || !this.isKey(key)) {
-        return false;
-      }
-      reactive.cookie = encodeURIComponent(key) +
-          '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' +
-          (domain ? '; domain=' + domain : defaultConfig.domain) +
-          (path ? '; path=' + path : defaultConfig.path) +
-          '; SameSite=Lax';
-      return this;
-    },
-    isKey: function (key) {
-      return (new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=')).test(reactive.cookie);
-    },
-    keys: function () {
-      if (!reactive.cookie) return [];
-      var _keys = reactive.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/);
-      for (var _index = 0; _index < _keys.length; _index++) {
-        _keys[_index] = decodeURIComponent(_keys[_index]);
-      }
-      return _keys;
-    }
-  };
-
-  if (typeof exports == 'object') {
-    module.exports = VueCookies;
-  } else if (typeof define == 'function' && define.amd) {
-    define([], function () {
-      return VueCookies;
+            return cookies;
+          },
+          set(cookie) {
+            document.cookie = cookie;
+            this.refresh();
+          },
+        },
+      },
+      created() {
+        this.refresh();
+      },
+      methods: {
+        refresh() {
+          this.docCookie = document.cookie;
+        },
+      },
     });
-  } else if (window.Vue) {
-    Vue.use(VueCookies);
-  }
-  // vue-cookies can exist independently,no dependencies library
-  if (typeof window !== 'undefined') {
-    window.$cookies = VueCookies;
-  }
+    const resetCookies = this.reactive.refresh.bind(this);
+    // Listen for any http request to update cookies when they are done
+    // eslint-disable-next-line no-global-assign
+    fetch = function() {
+      return oldFetch.apply(this, arguments).then(resetCookies());
+    };
+    const open = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function() {
+      setTimeout(() => {
+        const old = this.onreadystatechange;
+        this.onreadystatechange = function() {
+          resetCookies();
+          old.apply(this, arguments);
+        };
+      }, 0);
+      return open.apply(this, arguments);
+    };
+  },
+  config(expireTimes, path, domain, secure, sameSite) {
+    defaultConfig.expires = expireTimes || '1d';
+    defaultConfig.path = path ? '; path=' + path : '; path=/';
+    defaultConfig.domain = domain ? '; domain=' + domain : '';
+    defaultConfig.secure = secure ? '; Secure' : '';
+    defaultConfig.sameSite = sameSite ? '; SameSite=' + sameSite : '; SameSite=Lax';
+  },
+  get(key) {
+    return key !== undefined ? this.reactive.cookies[key] : this.reactive.cookies;
+  },
+  set(key, value, expireTimes, path, domain, secure, sameSite) {
+    if (/^(?:expires|max-age|path|domain|secure|SameSite)$/i.test(key)) {
+      throw new Error('Cookie key name illegality, Cannot be set to ["expires","max-age","path","domain","secure","SameSite"]\t current key name: ' + key);
+    }
+    // support json object
+    if (value && value.constructor === Object) {
+      value = JSON.stringify(value);
+    }
+    let _expires = '';
+    expireTimes = expireTimes === undefined ? defaultConfig.expires : expireTimes;
+    if (expireTimes) {
+      switch (expireTimes.constructor) {
+        case Number:
+          if (expireTimes === Infinity || expireTimes === -1) _expires = '; expires=Fri, 31 Dec 9999 23:59:59 GMT';
+          else _expires = '; max-age=' + expireTimes;
+          break;
+        case String:
+          if (/^(?:\d+(y|m|d|h|min|s))$/i.test(expireTimes)) {
+            // get capture number group
+            const _expireTime = expireTimes.replace(/^(\d+)(?:y|m|d|h|min|s)$/i, '$1');
+            // get capture type group , to lower case
+            switch (expireTimes.replace(/^(?:\d+)(y|m|d|h|min|s)$/i, '$1').toLowerCase()) {
+              // Frequency sorting
+              case 'm':
+                _expires = '; max-age=' + +_expireTime * 2592000;
+                break; // 60 * 60 * 24 * 30
+              case 'd':
+                _expires = '; max-age=' + +_expireTime * 86400;
+                break; // 60 * 60 * 24
+              case 'h':
+                _expires = '; max-age=' + +_expireTime * 3600;
+                break; // 60 * 60
+              case 'min':
+                _expires = '; max-age=' + +_expireTime * 60;
+                break; // 60
+              case 's':
+                _expires = '; max-age=' + _expireTime;
+                break;
+              case 'y':
+                _expires = '; max-age=' + +_expireTime * 31104000;
+                break; // 60 * 60 * 24 * 30 * 12
+              default:
+                throw new Error('unknown exception of "set operation"');
+            }
+          } else {
+            _expires = '; expires=' + expireTimes;
+          }
+          break;
+        case Date:
+          _expires = '; expires=' + expireTimes.toUTCString();
+          break;
+      }
+    }
+    this.reactive.cookies =
+      encodeURIComponent(key) + '=' + encodeURIComponent(value) +
+      _expires +
+      (domain ? '; domain=' + domain : defaultConfig.domain) +
+      (path ? '; path=' + path : defaultConfig.path) +
+      (secure === undefined ? defaultConfig.secure : secure ? '; Secure' : '') +
+      (sameSite === undefined ? defaultConfig.sameSite : (sameSite ? '; SameSite=' + sameSite : ''));
+    return this;
+  },
+  remove(key, path, domain) {
+    if (!key || !this.isKey(key)) {
+      return false;
+    }
+    this.reactive.cookies = encodeURIComponent(key) +
+      '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' +
+      (domain ? '; domain=' + domain : defaultConfig.domain) +
+      (path ? '; path=' + path : defaultConfig.path) +
+      '; SameSite=Lax';
+    return this;
+  },
+  isKey(key) {
+    return key in this.reactive.cookies;
+  },
+  keys() {
+    return Object.keys(this.reactive.cookies);
+  },
+  refresh() {
+    this.reactive.refresh();
 
-})();
+    return this;
+  },
+};
