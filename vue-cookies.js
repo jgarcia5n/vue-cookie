@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports["default"] = void 0;
 var defaultConfig = {
   expires: '1d',
   path: '; path=/',
@@ -21,26 +21,13 @@ var _default = {
     this.reactive = new Vue({
       data: function data() {
         return {
-          docCookie: ''
+          internalCookies: {}
         };
       },
       computed: {
         cookies: {
           get: function get() {
-            var c = this.docCookie.split('; ');
-            var cookies = {};
-
-            for (var i = c.length - 1; i >= 0; i--) {
-              var k = c[i].split('=');
-
-              try {
-                cookies[k[0]] = JSON.parse(k[1]);
-              } catch (e) {
-                cookies[k[0]] = k[1];
-              }
-            }
-
-            return cookies;
+            return this.internalCookies;
           },
           set: function set(cookie) {
             document.cookie = cookie;
@@ -53,7 +40,42 @@ var _default = {
       },
       methods: {
         refresh: function refresh() {
-          this.docCookie = document.cookie;
+          var _this = this;
+
+          var keys = Object.keys(this.internalCookies);
+          var c = document.cookie.split('; ');
+          var cookies = {};
+
+          var _loop = function _loop(i) {
+            var s = c[i].split('=');
+            var k = decodeURIComponent(s[0]),
+                v = decodeURIComponent(s[1]);
+
+            try {
+              if (JSON.stringify(_this.internalCookies[k]) !== v) {
+                var val = JSON.parse(v);
+
+                _this.$set(_this.internalCookies, k, val);
+              }
+            } catch (e) {
+              if (v !== _this.internalCookies[k]) {
+                _this.$set(_this.internalCookies, k, v);
+              }
+            }
+
+            keys = keys.filter(function (ke) {
+              return ke !== k;
+            });
+          };
+
+          for (var i = c.length - 1; i >= 0; i--) {
+            _loop(i);
+          }
+
+          keys.forEach(function (k) {
+            _this.$delete(_this.internalCookies, k);
+          });
+          return cookies;
         }
       }
     });
@@ -67,14 +89,17 @@ var _default = {
     var open = XMLHttpRequest.prototype.open;
 
     XMLHttpRequest.prototype.open = function () {
-      var _this = this;
+      var _this2 = this;
 
       setTimeout(function () {
-        var old = _this.onreadystatechange;
+        var old = _this2.onreadystatechange;
 
-        _this.onreadystatechange = function () {
+        _this2.onreadystatechange = function () {
           resetCookies();
-          old.apply(this, arguments);
+
+          if (old) {
+            old.apply(this, arguments);
+          }
         };
       }, 0);
       return open.apply(this, arguments);
@@ -183,4 +208,4 @@ var _default = {
     return this;
   }
 };
-exports.default = _default;
+exports["default"] = _default;

@@ -1,10 +1,12 @@
 {
   "name": "vue-cookies-reactive",
-  "version": "2.0.5",
+  "version": "2.1.1",
   "description": "A simple Vue.js plugin for handling browser cookies and refreshing them when a request is made",
   "main": "vue-cookies.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build",
+    "build": "npx babel src/vue-cookies.js --out-file vue-cookies.js --presets=@babel/preset-env"
   },
   "repository": {
     "type": "git",
@@ -31,6 +33,11 @@
   "homepage": "https://github.com/tofandel/vue-cookies#readme",
   "typings": "types/index.d.ts",
   "dependencies": {
-    "vue": "^2.6.11"
+    "vue": "^2.6.14"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.15.4",
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.4"
   }
 }
