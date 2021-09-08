@@ -32,11 +32,12 @@ var _default = {
 
             for (var i = c.length - 1; i >= 0; i--) {
               var k = c[i].split('=');
+              var v = decodeURI(k[1]);
 
               try {
-                cookies[k[0]] = JSON.parse(k[1]);
+                cookies[k[0]] = JSON.parse(v);
               } catch (e) {
-                cookies[k[0]] = k[1];
+                cookies[k[0]] = decodeURI(v);
               }
             }
 
