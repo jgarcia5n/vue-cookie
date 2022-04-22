@@ -48,8 +48,8 @@ var _default = {
 
           var _loop = function _loop(i) {
             var s = c[i].split('=');
-            var k = decodeURIComponent(s[0]),
-            var v
+            var k = decodeURIComponent(s[0]);
+            var v;
             try {
               v = decodeURIComponent(s[1]);
             } catch {
