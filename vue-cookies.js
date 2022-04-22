@@ -49,7 +49,12 @@ var _default = {
           var _loop = function _loop(i) {
             var s = c[i].split('=');
             var k = decodeURIComponent(s[0]),
-                v = decodeURIComponent(s[1]);
+            var v
+            try {
+              v = decodeURIComponent(s[1]);
+            } catch {
+              v = null
+            }
 
             try {
               if (JSON.stringify(_this.internalCookies[k]) !== v) {
