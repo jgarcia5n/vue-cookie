@@ -41,7 +41,13 @@ export default {
 
           for (let i = c.length - 1; i >= 0; i--) {
             const s = c[i].split('=');
-            const k = decodeURIComponent(s[0]), v = decodeURIComponent(s[1]);
+            const k = decodeURIComponent(s[0]);
+            let v
+            try {
+              v = decodeURIComponent(s[1]);
+            } catch {
+              v = null
+            }
             try {
               if (JSON.stringify(this.internalCookies[k]) !== v) {
                 const val = JSON.parse(v);
