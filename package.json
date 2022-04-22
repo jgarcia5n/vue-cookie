@@ -1,6 +1,6 @@
 {
   "name": "vue-cookies-reactive",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A simple Vue.js plugin for handling browser cookies and refreshing them when a request is made",
   "main": "vue-cookies.js",
   "scripts": {
